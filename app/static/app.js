@@ -37,7 +37,7 @@ async function loadConfig() {
     const hh = String(cfg.pick_hour).padStart(2, "0");
     const mm = String(cfg.pick_minute).padStart(2, "0");
     $("#schedule-note").textContent =
-      `A new dinner is picked automatically every day at ${hh}:${mm} (${cfg.timezone})`;
+      `// a fresh dinner is served daily @ ${hh}:${mm} - ${cfg.timezone}`;
   } catch (_) {}
 }
 
@@ -52,11 +52,11 @@ async function loadToday(animate = false) {
       hour: "numeric", minute: "2-digit",
     });
     metaEl.textContent = selection.manual
-      ? `Chosen manually at ${t}`
-      : `Auto-picked at ${t}`;
+      ? `chosen manually at ${t}`
+      : `auto-picked at ${t}`;
   } else {
-    pickEl.textContent = "Not picked yet";
-    metaEl.textContent = "Roll now or wait for the daily pick.";
+    pickEl.textContent = "not picked yet";
+    metaEl.textContent = "roll now, or wait for the daily pick.";
   }
   if (animate) {
     pickEl.classList.remove("spin");
@@ -76,10 +76,11 @@ async function loadDinners() {
     const li = document.createElement("li");
     li.className = "dinner-item" + (d.active ? "" : " inactive");
 
-    const toggle = document.createElement("div");
-    toggle.className = "toggle" + (d.active ? " on" : "");
-    toggle.title = d.active ? "Active — click to pause" : "Paused — click to enable";
-    toggle.onclick = async () => {
+    const chk = document.createElement("span");
+    chk.className = "chk" + (d.active ? " on" : "");
+    chk.textContent = d.active ? "[x]" : "[ ]";
+    chk.title = d.active ? "active — click to pause" : "paused — click to enable";
+    chk.onclick = async () => {
       await api(`/api/dinners/${d.id}`, {
         method: "PATCH",
         body: JSON.stringify({ active: !d.active }),
@@ -90,20 +91,20 @@ async function loadDinners() {
     const name = document.createElement("span");
     name.className = "name";
     name.textContent = d.name;
-    name.title = "Click to rename";
+    name.title = "click to rename";
     name.onclick = () => startRename(name, d);
 
     const del = document.createElement("button");
-    del.className = "btn btn-icon danger";
-    del.textContent = "🗑";
-    del.title = "Delete";
+    del.className = "del";
+    del.textContent = "[del]";
+    del.title = "delete";
     del.onclick = async () => {
       if (!confirm(`Delete "${d.name}"?`)) return;
       await api(`/api/dinners/${d.id}`, { method: "DELETE" });
       loadDinners();
     };
 
-    li.append(toggle, name, del);
+    li.append(chk, name, del);
     list.appendChild(li);
   }
 }
@@ -148,14 +149,21 @@ async function loadHistory() {
     const li = document.createElement("li");
     li.className = "history-item";
 
-    const left = document.createElement("span");
-    left.innerHTML = `${h.name}${h.manual ? '<span class="tag">manual</span>' : ""}`;
-
     const date = document.createElement("span");
     date.className = "date";
     date.textContent = fmtDate(h.pick_date);
 
-    li.append(left, date);
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = h.name;
+
+    li.append(date, name);
+    if (h.manual) {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = "[manual]";
+      li.append(tag);
+    }
     list.appendChild(li);
   }
 }

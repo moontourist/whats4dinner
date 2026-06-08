@@ -8,41 +8,59 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23282828'/><text x='16' y='23' font-family='monospace' font-weight='bold' font-size='15' fill='%23e78a4e' text-anchor='middle'>W4</text></svg>" />
 </head>
 <body>
-  <header>
-    <h1>🍽️ What's 4 Dinner?</h1>
-    <p class="subtitle" id="schedule-note"></p>
-  </header>
+  <div class="screen">
+    <header>
+<pre class="banner" aria-label="What's 4 Dinner">__        ___  _   ____
+\ \      / / || | |  _ \
+ \ \ /\ / /| || |_| | | |
+  \ V  V / |__   _| |_| |
+   \_/\_/     |_| |____/</pre>
+      <p class="tagline">&middot; what's 4 dinner? &middot;</p>
+      <p class="sysline" id="schedule-note">// loading&hellip;</p>
+    </header>
 
-  <main>
-    <!-- Today's pick -->
-    <section class="card hero">
-      <span class="hero-label">Tonight's dinner</span>
-      <div class="hero-pick" id="today-pick">…</div>
-      <div class="hero-meta" id="today-meta"></div>
-      <button class="btn btn-primary" id="roll-btn">🎲 Roll again</button>
-    </section>
+    <div class="rule"></div>
 
-    <!-- Dinner list -->
-    <section class="card">
-      <h2>Dinner options</h2>
-      <form id="add-form" class="add-row">
-        <input type="text" id="add-input" placeholder="Add a dinner… (e.g. Tacos)" autocomplete="off" />
-        <button class="btn btn-primary" type="submit">Add</button>
-      </form>
-      <ul id="dinner-list" class="dinner-list"></ul>
-      <p class="empty" id="dinner-empty" hidden>No dinners yet — add a few to get started!</p>
-    </section>
+    <main>
+      <!-- Today's pick -->
+      <section class="panel hero">
+        <span class="panel-title">tonight's dinner</span>
+        <div class="hero-pick" id="today-pick">&hellip;</div>
+        <div class="hero-meta" id="today-meta"></div>
+        <button class="btn btn-primary" id="roll-btn">[ roll the dice ]</button>
+      </section>
 
-    <!-- History -->
-    <section class="card">
-      <h2>Recent picks</h2>
-      <ul id="history-list" class="history-list"></ul>
-      <p class="empty" id="history-empty" hidden>No picks yet.</p>
-    </section>
-  </main>
+      <!-- Dinner list -->
+      <section class="panel">
+        <span class="panel-title">dinner options</span>
+        <form id="add-form" class="add-row">
+          <span class="prompt">&gt;</span>
+          <input type="text" id="add-input" placeholder="add a dinner... (e.g. tacos)" autocomplete="off" />
+          <button class="btn" type="submit">[ add ]</button>
+        </form>
+        <ul id="dinner-list" class="dinner-list"></ul>
+        <p class="empty" id="dinner-empty" hidden>no dinners on file -- add a few to get started.</p>
+      </section>
+
+      <!-- History -->
+      <section class="panel">
+        <span class="panel-title">recent picks</span>
+        <ul id="history-list" class="history-list"></ul>
+        <p class="empty" id="history-empty" hidden>no picks logged yet.</p>
+      </section>
+    </main>
+
+    <div class="rule"></div>
+
+    <footer>
+      <span>-=[ est. 2026 ]=-</span>
+      <span>served fresh daily @ 14:00</span>
+      <span>best viewed in any terminal</span>
+    </footer>
+  </div>
 
   <div id="toast" class="toast" hidden></div>
 
