@@ -1,91 +1,215 @@
-# 🍽️ What's 4 Dinner?
+<div align="center">
 
-A tiny self-hosted dinner chooser for your CasaOS (or any Docker) server.
-You supply a list of possible dinners; every day at **2 PM** the app picks one
-at random and shows it as the day's dinner. Includes a clean web UI for
-managing your list and browsing past picks.
+```
+__        ___  _   ____
+\ \      / / || | |  _ \
+ \ \ /\ / /| || |_| | | |
+  \ V  V / |__   _| |_| |
+   \_/\_/     |_| |____/
+```
 
-## Features
+`· what's 4 dinner? ·`
 
-- 🎲 **Automatic daily pick** at a configurable time (default 2 PM, your timezone)
-- 📝 **Manage dinners** — add, rename (click the name), pause/enable, or delete
-- 🔁 **Roll again** button to manually re-pick at any time
-- 🧠 **No instant repeats** — avoids choosing the same dinner two picks in a row
-- 📜 **History** of recent picks
-- 💾 **Persistent storage** via SQLite on a mounted volume
+a tiny self-hosted dinner chooser for your casaos (or any docker) server.
+feed it a list of dinners; every day at **14:00** it picks one at random and
+serves it as the day's dinner.
 
-## Quick start (Docker Compose)
+</div>
 
-1. Edit `docker-compose.yml` and set `TZ` to your timezone
-   (e.g. `America/New_York`, `Europe/London`). This controls when 2 PM is.
-2. Build and run:
+---
 
-   ```bash
-   docker compose up -d --build
-   ```
+## `[ the gist ]`
 
-3. Open <http://your-server-ip:8137> and start adding dinners.
+```
+ ════════════════════════════════════════════════
+ ┌─[ tonight's dinner ]──────────────────────────┐
+ │              >> TACOS <<                       │
+ │           auto-picked at 2:00 pm               │
+ │              [ roll the dice ]                 │
+ └────────────────────────────────────────────────┘
+ ┌─[ dinner options ]────────────────────────────┐
+ │  > add a dinner...                    [ add ]  │
+ │  [x] tacos                            [del]    │
+ │  [ ] meatloaf                         [del]    │
+ └────────────────────────────────────────────────┘
+        -=[ est. 2026 ]=-  ·  best viewed in any terminal
+```
 
-## Adding to CasaOS
+- **automatic daily pick** at a configurable time (default `14:00`, your timezone)
+- **manage dinners** — add, rename (click the name), pause `[x]`/`[ ]`, or delete
+- **roll the dice** to manually re-pick at any time
+- **no instant repeats** — won't choose the same dinner two picks in a row
+- **history log** of recent picks
+- **persistent storage** via sqlite on a mounted volume
+- single small container · vanilla web ui · no build step
 
-CasaOS can import a Compose file directly:
+---
 
-1. In CasaOS, go to **App Store → Custom Install** (the `+` / `Install a customized app`).
-2. Either paste the contents of `docker-compose.yml`, or build the image first
-   (`docker compose build`) and point CasaOS at the `whats4dinner` image.
-3. Make sure the **TZ** environment variable matches your locale and that the
-   `/data` volume is mapped to persistent storage.
-4. Set the WebUI port to `8137` so CasaOS shows a clickable launch button.
+## `[ requirements ]`
 
-## Configuration
+- a server running **docker** (casaos already includes it)
+- a free port for the web ui — this guide uses **`8137`**
 
-All settings are environment variables:
+---
 
-| Variable      | Default | Description                                  |
+## `[ install — casaos dashboard tile ]`  *(recommended)*
+
+casaos installs apps by **pulling an image**, so the trick is to build the
+image once on the server, then point casaos at that local image.
+
+**1 · clone the repo onto the server** *(over ssh)*
+
+```bash
+cd ~
+git clone https://github.com/moontourist/whats4dinner.git
+cd whats4dinner
+```
+
+**2 · build the image**
+
+```bash
+docker build -t whats4dinner:latest .
+```
+
+confirm it exists:
+
+```bash
+docker images | grep whats4dinner
+```
+
+**3 · set your timezone** — open `casaos-app.yml` and make sure `TZ` matches
+your locale (this decides when `14:00` actually fires):
+
+```yaml
+environment:
+  TZ: America/Los_Angeles    # <- your timezone
+  PICK_HOUR: "14"            # 24h clock — 14 = 2 pm
+  PICK_MINUTE: "0"
+```
+
+**4 · add the tile in casaos**
+
+1. open the casaos dashboard → **`+`** → **install a customized app**
+2. click the **import** icon (top-right) and paste the full contents of
+   **`casaos-app.yml`**
+3. click **install**
+
+casaos uses your local `whats4dinner:latest` image (the `pull_policy: never`
+line stops it trying to download from the internet), starts the container, and
+drops a tile on your dashboard. click **open web ui** to launch it on `:8137`.
+
+> don't also run `docker compose up` for this app — let casaos own the
+> container so they don't fight over the port.
+
+---
+
+## `[ install — plain docker compose ]`  *(no dashboard tile)*
+
+prefer the command line, or not on casaos? use the included compose file.
+
+```bash
+git clone https://github.com/moontourist/whats4dinner.git
+cd whats4dinner
+# edit docker-compose.yml -> set TZ to your timezone, then:
+docker compose up -d --build
+```
+
+then open **`http://<server-ip>:8137`** and start adding dinners.
+
+---
+
+## `[ configuration ]`
+
+all settings are environment variables:
+
+| variable      | default | description                                  |
 | ------------- | ------- | -------------------------------------------- |
-| `TZ`          | `UTC`   | Timezone used to decide when the pick fires  |
-| `PICK_HOUR`   | `14`    | Hour of day (24h) for the automatic pick     |
-| `PICK_MINUTE` | `0`     | Minute of the hour for the automatic pick    |
-| `DATA_DIR`    | `/data` | Where the SQLite database is stored          |
+| `TZ`          | `UTC`   | timezone used to decide when the pick fires  |
+| `PICK_HOUR`   | `14`    | hour of day (24h) for the automatic pick     |
+| `PICK_MINUTE` | `0`     | minute of the hour for the automatic pick    |
+| `DATA_DIR`    | `/data` | where the sqlite database is stored          |
 
-## How the daily pick works
+**changing the port:** edit the published port (`8137`) in `casaos-app.yml`
+(`published:` **and** `port_map:`) or in `docker-compose.yml` (`"8137:8080"`).
+the app always listens on `8080` *inside* the container — only change the
+left/host side.
 
-- A background scheduler runs once a day at `PICK_HOUR:PICK_MINUTE` in `TZ`.
-- It chooses a random **active** dinner and records it for that date.
-- The automatic job won't overwrite a pick you made manually that same day.
-- The **Roll again** button always overrides today's pick.
-- If the server is off at 2 PM, no pick is recorded for the missed time, but
-  you can still roll manually whenever you like.
+---
 
-## Local development
+## `[ how the daily pick works ]`
+
+- a background scheduler runs once a day at `PICK_HOUR:PICK_MINUTE` in `TZ`
+- it chooses a random **active** dinner and records it for that date
+- the automatic job won't overwrite a pick you made manually that same day
+- **roll the dice** always overrides today's pick
+- if the server is off at pick time, no pick is recorded for the missed slot,
+  but you can still roll manually whenever you like
+
+---
+
+## `[ updating ]`
+
+```bash
+cd ~/whats4dinner
+git pull
+docker build -t whats4dinner:latest .
+```
+
+then recreate the app in casaos (app settings → recreate), or
+`docker compose up -d --build` for the compose setup. your dinners and history
+are safe in the data volume (`/DATA/AppData/whats4dinner/data` on casaos).
+
+---
+
+## `[ local development ]`
 
 ```bash
 pip install -r requirements.txt
-DATA_DIR=./data TZ=America/New_York uvicorn app.main:app --reload --port 8080
+DATA_DIR=./data TZ=America/Los_Angeles uvicorn app.main:app --reload --port 8137
 ```
 
-## Project layout
+then open `http://localhost:8137`. `smoke_test.py` runs a quick end-to-end
+check of the api:
+
+```bash
+python smoke_test.py
+```
+
+---
+
+## `[ project layout ]`
 
 ```
 app/
-  main.py        FastAPI app, scheduler, JSON API
-  database.py    SQLite storage helpers
-  picker.py      Random dinner-picking logic
-  static/        Web UI (index.html, style.css, app.js)
+  main.py        fastapi app · scheduler · json api
+  database.py    sqlite storage helpers
+  picker.py      random dinner-picking logic
+  static/        web ui (index.html · style.css · app.js)
 Dockerfile
-docker-compose.yml
+docker-compose.yml     plain compose deploy
+casaos-app.yml         casaos custom-install file (dashboard tile)
+CASAOS-INSTALL.md      step-by-step casaos walkthrough
 ```
 
-## API
+---
 
-| Method | Path                 | Description                       |
-| ------ | -------------------- | --------------------------------- |
-| GET    | `/api/config`        | Timezone + schedule info          |
-| GET    | `/api/dinners`       | List all dinners                  |
-| POST   | `/api/dinners`       | Add a dinner `{ "name": "Tacos" }`|
-| PATCH  | `/api/dinners/{id}`  | Rename / toggle active            |
-| DELETE | `/api/dinners/{id}`  | Delete a dinner                   |
-| GET    | `/api/today`         | Today's selection                 |
-| POST   | `/api/roll`          | Re-roll today's pick              |
-| GET    | `/api/history`       | Recent picks                      |
-```
+## `[ api ]`
+
+| method | path                 | description                        |
+| ------ | -------------------- | ---------------------------------- |
+| GET    | `/api/config`        | timezone + schedule info           |
+| GET    | `/api/dinners`       | list all dinners                   |
+| POST   | `/api/dinners`       | add a dinner `{ "name": "tacos" }` |
+| PATCH  | `/api/dinners/{id}`  | rename / toggle active             |
+| DELETE | `/api/dinners/{id}`  | delete a dinner                    |
+| GET    | `/api/today`         | today's selection                  |
+| POST   | `/api/roll`          | re-roll today's pick               |
+| GET    | `/api/history`       | recent picks                       |
+
+---
+
+<div align="center">
+
+`-=[ est. 2026 ]=-  ·  served fresh daily @ 14:00  ·  best viewed in any terminal`
+
+</div>
