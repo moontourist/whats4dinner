@@ -42,27 +42,63 @@ async function loadConfig() {
 }
 
 // --- Today ---------------------------------------------------------------
-async function loadToday(animate = false) {
+function metaForSelection(sel) {
+  const t = new Date(sel.chosen_at + "Z").toLocaleTimeString(undefined, {
+    hour: "numeric", minute: "2-digit",
+  });
+  return sel.manual ? `chosen manually at ${t}` : `auto-picked at ${t}`;
+}
+
+async function loadToday() {
   const { selection } = await api("/api/today");
   const pickEl = $("#today-pick");
   const metaEl = $("#today-meta");
   if (selection) {
     pickEl.textContent = selection.name;
-    const t = new Date(selection.chosen_at + "Z").toLocaleTimeString(undefined, {
-      hour: "numeric", minute: "2-digit",
-    });
-    metaEl.textContent = selection.manual
-      ? `chosen manually at ${t}`
-      : `auto-picked at ${t}`;
+    metaEl.textContent = metaForSelection(selection);
   } else {
     pickEl.textContent = "not picked yet";
     metaEl.textContent = "roll now, or wait for the daily pick.";
   }
-  if (animate) {
-    pickEl.classList.remove("spin");
-    void pickEl.offsetWidth; // restart animation
-    pickEl.classList.add("spin");
-  }
+}
+
+// Spin the hero name like a slot reel: cycle fast through the pool, then
+// decelerate (each frame waits a little longer) and land on `finalName`.
+function spinReel(pickEl, pool, finalName, onDone) {
+  const frames = 30;
+  const minDelay = 28;   // ms — opening speed (really fast)
+  const maxDelay = 430;  // ms — final crawl before it stops
+  let i = 0;
+  let last = null;
+
+  pickEl.classList.remove("settle");
+  pickEl.classList.add("reel");
+
+  const tick = () => {
+    if (i >= frames) {
+      pickEl.textContent = finalName;
+      pickEl.classList.remove("reel");
+      pickEl.classList.add("settle");
+      onDone && onDone();
+      return;
+    }
+    let name;
+    if (pool.length > 1) {
+      do {
+        name = pool[Math.floor(Math.random() * pool.length)];
+      } while (name === last);
+    } else {
+      name = pool[0] || finalName;
+    }
+    last = name;
+    pickEl.textContent = name;
+    i++;
+    // Exponential ease-out: delay grows smoothly from minDelay to maxDelay.
+    const t = i / frames;
+    const delay = minDelay * Math.pow(maxDelay / minDelay, t);
+    setTimeout(tick, delay);
+  };
+  tick();
 }
 
 // --- Dinners -------------------------------------------------------------
@@ -181,12 +217,33 @@ $("#add-form").addEventListener("submit", async (e) => {
   } catch (e) { toast(e.message); }
 });
 
+let spinning = false;
 $("#roll-btn").addEventListener("click", async () => {
+  if (spinning) return;
+  const btn = $("#roll-btn");
+  const pickEl = $("#today-pick");
+  const metaEl = $("#today-meta");
   try {
-    await api("/api/roll", { method: "POST" });
-    await loadToday(true);
-    loadHistory();
-  } catch (e) { toast(e.message); }
+    // Names to spin through, and the server-decided result.
+    const dinners = await api("/api/dinners");
+    const pool = dinners.filter((d) => d.active).map((d) => d.name);
+    const sel = await api("/api/roll", { method: "POST" });
+
+    spinning = true;
+    btn.disabled = true;
+    metaEl.textContent = "rolling the dice...";
+
+    spinReel(pickEl, pool.length ? pool : [sel.name], sel.name, () => {
+      metaEl.textContent = metaForSelection(sel);
+      spinning = false;
+      btn.disabled = false;
+      loadHistory();
+    });
+  } catch (e) {
+    spinning = false;
+    btn.disabled = false;
+    toast(e.message);
+  }
 });
 
 // --- Init ----------------------------------------------------------------

@@ -115,8 +115,20 @@ header { text-align: center; }
 }
 .hero-pick::before { content: ">> "; color: var(--muted); font-weight: 400; }
 .hero-pick::after  { content: " <<"; color: var(--muted); font-weight: 400; }
-.hero-pick.spin { animation: blink 0.45s steps(2, start) 2; }
-@keyframes blink { 50% { opacity: 0.25; } }
+
+/* While the reel is spinning: slight motion blur + dimmed accent. */
+.hero-pick.reel {
+  color: var(--accent2);
+  filter: blur(0.6px);
+  opacity: 0.9;
+}
+/* When it stops: a quick pop to draw the eye. */
+.hero-pick.settle { animation: settle 0.4s ease-out; }
+@keyframes settle {
+  0%   { transform: scale(1.15); color: var(--accent2); }
+  55%  { transform: scale(0.97); }
+  100% { transform: scale(1); color: var(--accent); }
+}
 
 .hero-meta {
   color: var(--muted);
@@ -138,6 +150,8 @@ header { text-align: center; }
 }
 .btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
 .btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:disabled:hover { background: transparent; color: var(--accent); border-color: var(--accent); }
 
 .btn-primary { color: var(--accent); border-color: var(--accent); font-weight: 600; }
 .btn-primary:hover { background: var(--accent); color: var(--bg); }
