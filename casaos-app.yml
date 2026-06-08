@@ -1,0 +1,43 @@
+name: whats4dinner
+services:
+  whats4dinner:
+    image: whats4dinner:latest
+    # The image is built locally on the server (see CASAOS-INSTALL.md), so don't
+    # let CasaOS try to pull it from a registry.
+    pull_policy: never
+    container_name: whats4dinner
+    ports:
+      - target: 8080
+        published: "8137"
+        protocol: tcp
+    environment:
+      TZ: America/Los_Angeles
+      PICK_HOUR: "14"   # 24h clock — 14 = 2 PM
+      PICK_MINUTE: "0"
+    volumes:
+      - type: bind
+        source: /DATA/AppData/whats4dinner/data
+        target: /data
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          memory: 64M
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: whats4dinner
+  author: self
+  developer: self
+  category: Home
+  description:
+    en_us: A self-hosted dinner chooser. Add your dinners and it picks a random one every day at 2 PM.
+  tagline:
+    en_us: What's 4 dinner tonight?
+  title:
+    en_us: What's 4 Dinner
+  icon: https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f37d.png
+  index: /
+  scheme: http
+  port_map: "8137"

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's 4 Dinner?</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+</head>
+<body>
+  <header>
+    <h1>🍽️ What's 4 Dinner?</h1>
+    <p class="subtitle" id="schedule-note"></p>
+  </header>
+
+  <main>
+    <!-- Today's pick -->
+    <section class="card hero">
+      <span class="hero-label">Tonight's dinner</span>
+      <div class="hero-pick" id="today-pick">…</div>
+      <div class="hero-meta" id="today-meta"></div>
+      <button class="btn btn-primary" id="roll-btn">🎲 Roll again</button>
+    </section>
+
+    <!-- Dinner list -->
+    <section class="card">
+      <h2>Dinner options</h2>
+      <form id="add-form" class="add-row">
+        <input type="text" id="add-input" placeholder="Add a dinner… (e.g. Tacos)" autocomplete="off" />
+        <button class="btn btn-primary" type="submit">Add</button>
+      </form>
+      <ul id="dinner-list" class="dinner-list"></ul>
+      <p class="empty" id="dinner-empty" hidden>No dinners yet — add a few to get started!</p>
+    </section>
+
+    <!-- History -->
+    <section class="card">
+      <h2>Recent picks</h2>
+      <ul id="history-list" class="history-list"></ul>
+      <p class="empty" id="history-empty" hidden>No picks yet.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
